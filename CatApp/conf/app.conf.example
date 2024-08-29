@@ -1,0 +1,14 @@
+# Application Name
+appname = CatApp
+
+# HTTP Port
+httpport = 8080
+
+# Run Mode: dev, prod, or test
+runmode = dev
+
+# API Key (Replace with your actual key)
+catapi_key = your_api_key_here
+
+# User Subscription ID (Replace with your actual ID. It can be anything as your wish)
+user_sub_id = your_user_sub_id_here
