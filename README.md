@@ -23,19 +23,22 @@ Before you begin, ensure you have the following installed:
 
    ```
    git clone https://github.com/Oyshik-ICT/beegoCatProject.git
+
    cd beegoCatProject/CatApp
    ```
 
-2. Install dependencies:
+2. Install the Beego framework and the Bee tool:
+
+   ```
+   go get github.com/beego/beego/v2@latest
+
+   go install github.com/beego/bee/v2@latest
+   ```
+
+3. Install dependencies:
 
    ```
    go mod tidy
-   ```
-
-3. Install the Bee tool (optional, but recommended for development):
-
-   ```
-   go install github.com/beego/bee/v2@latest
    ```
 
 4. Set up your configuration:
