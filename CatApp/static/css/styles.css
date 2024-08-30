@@ -30,6 +30,7 @@
 
 .nav{
     background-color: black;
+    margin: 10px;
 }
 
 .nav-item{
@@ -50,4 +51,9 @@
 
 .container{
     width: 60%;
+    border: 1px solid gainsboro;
+}
+
+.d-flex {
+    margin: 10px;
 }
