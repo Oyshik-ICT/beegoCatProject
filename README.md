@@ -32,7 +32,13 @@ Before you begin, ensure you have the following installed:
    go mod tidy
    ```
 
-3. Set up your configuration:
+3. Install the Bee tool (optional, but recommended for development):
+
+   ```
+   go install github.com/beego/bee/v2@latest
+   ```
+
+4. Set up your configuration:
 
    - Copy `conf/app.conf.example` to `conf/app.conf`
    - Edit `conf/app.conf` and replace `your_api_key_here` with your actual Cat API key
