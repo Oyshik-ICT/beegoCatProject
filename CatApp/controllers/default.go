@@ -12,6 +12,20 @@ type MainController struct {
 	beego.Controller
 }
 
+// New function to make API calls using channels
+func makeAPIRequest(url string, apiKey string, result interface{}) error {
+	responseChan := make(chan error, 1)
+
+	go func() {
+		req := httplib.Get(url)
+		req.Header("x-api-key", apiKey)
+		err := req.ToJSON(&result)
+		responseChan <- err
+	}()
+
+	return <-responseChan
+}
+
 func (c *MainController) Get() {
 	c.Data["Page"] = "index"
 	c.TplName = "index.tpl"
@@ -34,11 +48,9 @@ func (c *MainController) ShowFavorites() {
 
 func (c *MainController) GetBreeds() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
-	req := httplib.Get("https://api.thecatapi.com/v1/breeds")
-	req.Header("x-api-key", apiKey)
-
 	var breeds interface{}
-	err := req.ToJSON(&breeds)
+
+	err := makeAPIRequest("https://api.thecatapi.com/v1/breeds", apiKey, &breeds)
 	if err != nil {
 		c.Data["json"] = map[string]interface{}{"error": err.Error()}
 	} else {
@@ -57,11 +69,9 @@ func (c *MainController) GetBreedImages() {
 
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?limit=8&breed_id=%s", breedID)
-	req := httplib.Get(url)
-	req.Header("x-api-key", apiKey)
 
 	var breedImages []interface{}
-	err := req.ToJSON(&breedImages)
+	err := makeAPIRequest(url, apiKey, &breedImages)
 	if err != nil {
 		c.Data["json"] = map[string]interface{}{"error": err.Error()}
 	} else {
@@ -85,11 +95,9 @@ func (c *MainController) GetConfig() {
 
 func (c *MainController) GetRandomImage() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
-	req := httplib.Get("https://api.thecatapi.com/v1/images/search")
-	req.Header("x-api-key", apiKey)
 
 	var images []map[string]interface{}
-	err := req.ToJSON(&images)
+	err := makeAPIRequest("https://api.thecatapi.com/v1/images/search", apiKey, &images)
 	if err != nil || len(images) == 0 {
 		c.Data["json"] = map[string]interface{}{"error": "Failed to get random image"}
 	} else {
@@ -111,22 +119,34 @@ func (c *MainController) AddFavorite() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	subID, _ := beego.AppConfig.String("user_sub_id")
 
-	req := httplib.Post("https://api.thecatapi.com/v1/favourites")
-	req.Header("x-api-key", apiKey)
-	req.Header("Content-Type", "application/json")
-	req.JSONBody(map[string]string{
-		"image_id": favorite.ImageID,
-		"sub_id":   subID,
-	})
-
-	var response struct {
+	responseChan := make(chan struct {
 		ID    int64  `json:"id"`
 		Error string `json:"message"`
-	}
-	err := req.ToJSON(&response)
-	if err != nil {
-		c.Data["json"] = map[string]interface{}{"error": "Failed to parse API response: " + err.Error()}
-	} else if response.ID != 0 {
+	}, 1)
+
+	go func() {
+		req := httplib.Post("https://api.thecatapi.com/v1/favourites")
+		req.Header("x-api-key", apiKey)
+		req.Header("Content-Type", "application/json")
+		req.JSONBody(map[string]string{
+			"image_id": favorite.ImageID,
+			"sub_id":   subID,
+		})
+
+		var response struct {
+			ID    int64  `json:"id"`
+			Error string `json:"message"`
+		}
+		err := req.ToJSON(&response)
+		if err != nil {
+			response.Error = "Failed to parse API response: " + err.Error()
+		}
+		responseChan <- response
+	}()
+
+	response := <-responseChan
+
+	if response.ID != 0 {
 		c.Data["json"] = map[string]interface{}{"id": response.ID}
 	} else {
 		c.Data["json"] = map[string]interface{}{"error": response.Error}
@@ -138,8 +158,7 @@ func (c *MainController) GetFavorites() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	subID, _ := beego.AppConfig.String("user_sub_id")
 
-	req := httplib.Get(fmt.Sprintf("https://api.thecatapi.com/v1/favourites?sub_id=%s", subID))
-	req.Header("x-api-key", apiKey)
+	url := fmt.Sprintf("https://api.thecatapi.com/v1/favourites?sub_id=%s", subID)
 
 	var favorites []struct {
 		ID    int `json:"id"`
@@ -148,7 +167,8 @@ func (c *MainController) GetFavorites() {
 			URL string `json:"url"`
 		} `json:"image"`
 	}
-	err := req.ToJSON(&favorites)
+
+	err := makeAPIRequest(url, apiKey, &favorites)
 	if err != nil {
 		c.Data["json"] = map[string]interface{}{"error": err.Error()}
 	} else {
