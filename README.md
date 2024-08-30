@@ -36,7 +36,7 @@ Before you begin, ensure you have the following installed:
 
    - Copy `conf/app.conf.example` to `conf/app.conf`
    - Edit `conf/app.conf` and replace `your_api_key_here` with your actual Cat API key
-   - Replace `your_user_sub_id_here` with a unique identifier for your app (it can be any string you choose)
+   - Replace `your_user_sub_id_here` with a unique identifier for your app. This can be any combination of letters, numbers, or both—essentially any string you choose.
 
    Example `app.conf`:
 
